@@ -5,6 +5,17 @@ public:
 	float _y;
 };
 
+class _BB_RoteAble
+{
+public:
+	_BB_RoteAble(float $width, float $height);
+
+	bool _Get_PointIntersect(float $posX, float $posY, float $pointX, float $pointY, float $direction);
+
+	float _width;
+	float _height;
+};
+
 class _Orbital
 {
 public:
@@ -33,6 +44,8 @@ class _Tank : public _Orbital
 {
 public:
 	_Tank();
+
+	_BB_RoteAble _hitBox;
 
 	_Key_ID _Tank_Key_ID;
 

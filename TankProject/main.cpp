@@ -20,11 +20,15 @@
 #include <gl/glu.h>		// glu header file - glu helps us set up the perspective projection
 #include <iostream>
 #include <math.h>
+#include <vector>
+using namespace std;
 
 #include "vertexHolder.h"
 #include "TankClasses.h"
 
 #define PI 3.14159265359
+
+#define AP currentGame->_lowOrbit[n]
 
 // some basic numbers to hold the position and size of the window
 #define WIDTH		800
@@ -110,8 +114,9 @@ class gameInfo
 		playerInfo** playerArray;
 
 		// ----- tank code
-		_Tank** _lowOrbit;
-		_Shell** _hightOrbit;
+		//_Tank** _lowOrbit;
+		vector<_Orbital*> _lowOrbit;
+		vector<_Orbital*> _hightOrbit;
 		// ----- tank code
 		
 };
@@ -447,29 +452,56 @@ void updateGame(HDC deviceContext, gameInfo* currentGame)
 			currentGame->playerArray[i]->rotation += (ROTATION_SPEED * deltaAdjustment);
 		}  
 	}
-	
+
+	for ()
+
 	for (int n = 0; n < TOTAL_PLAYERS; n++)
 	{
-		currentGame->_lowOrbit[n]->_Speed += (TANK_SPEED * deltaAdjustment) * (currentGame->_lowOrbit[n]->_Key_Up - currentGame->_lowOrbit[n]->_Key_Down);
-		currentGame->_lowOrbit[n]->_Direction += (TANK_ROT_SPEED * deltaAdjustment) * (currentGame->_lowOrbit[n]->_Key_Right - currentGame->_lowOrbit[n]->_Key_Left);
+		AP->_Speed += (TANK_SPEED * deltaAdjustment) * (AP->_Key_Up - AP->_Key_Down);
 
-		currentGame->_lowOrbit[n]->_pos._y += (cos(currentGame->_lowOrbit[n]->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * currentGame->_lowOrbit[n]->_Speed));
-		currentGame->_lowOrbit[n]->_pos._x += (sin(currentGame->_lowOrbit[n]->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * currentGame->_lowOrbit[n]->_Speed));
+		float $Direction = (TANK_ROT_SPEED * deltaAdjustment) * (AP->_Key_Right - AP->_Key_Left);
+		//float $Xpos = (cos($Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
+		//float $Ypos = (sin($Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
 
-		currentGame->_lowOrbit[n]->_Turret_Direction += (currentGame->_lowOrbit[n]->_Key_TRot_Right - currentGame->_lowOrbit[n]->_Key_TRot_Left) * 0.1f;
 
-		if (currentGame->_lowOrbit[n]->_Speed > TANK_MAX_SPEED)
+		if (AP->_hitBox._Get_PointIntersect(AP->_pos._x, AP->_pos._y, 0, 0, AP->_Direction + $Direction))
 		{
-			currentGame->_lowOrbit[n]->_Speed = TANK_MAX_SPEED;
-		}
-		else if (currentGame->_lowOrbit[n]->_Speed < -TANK_MAX_SPEED)
-		{
-			currentGame->_lowOrbit[n]->_Speed = -TANK_MAX_SPEED;
+			$Direction = 0;
 		}
 
-		if (!currentGame->_lowOrbit[n]->_Key_Up && !currentGame->_lowOrbit[n]->_Key_Down)
+		AP->_Direction += $Direction;
+		//currentGame->_lowOrbit[n]->_Direction += (TANK_ROT_SPEED * deltaAdjustment) * (currentGame->_lowOrbit[n]->_Key_Right - currentGame->_lowOrbit[n]->_Key_Left);
+
+		float $Xpos = (sin(AP->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
+		float $Ypos = (cos(AP->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
+
+		if (AP->_hitBox._Get_PointIntersect(AP->_pos._x + $Xpos, AP->_pos._y + $Ypos, 0, 0, AP->_Direction))
 		{
-			currentGame->_lowOrbit[n]->_Speed -= currentGame->_lowOrbit[n]->_Speed / 500;
+			$Xpos = 0;
+			$Ypos = 0;
+			AP->_Speed = 0;
+		}
+
+		AP->_pos._x += $Xpos;
+		AP->_pos._y += $Ypos;
+		
+		//AP->_pos._y += (cos(AP->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
+		//AP->_pos._x += (sin(AP->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
+
+		AP->_Turret_Direction += (AP->_Key_TRot_Right - AP->_Key_TRot_Left) * 0.1f;
+
+		if (AP->_Speed > TANK_MAX_SPEED)
+		{
+			AP->_Speed = TANK_MAX_SPEED;
+		}
+		else if (AP->_Speed < -TANK_MAX_SPEED)
+		{
+			AP->_Speed = -TANK_MAX_SPEED;
+		}
+
+		if (!AP->_Key_Up && !AP->_Key_Down)
+		{
+			AP->_Speed -= AP->_Speed / 500;
 		}
 	}
 }
@@ -649,11 +681,13 @@ gameInfo::gameInfo()
 	}
 
 
-	_lowOrbit = new _Tank*[TOTAL_PLAYERS];
+	//_lowOrbit = new _Tank*[TOTAL_PLAYERS];
 
 	for (int n = 0; n < TOTAL_PLAYERS; n++)
 	{
-		_lowOrbit[n] = new _Tank;
+		//_lowOrbit[n] = new _Tank;
+
+		_lowOrbit.push_back(new _Tank);
 
 		switch (n)
 		{
@@ -724,8 +758,9 @@ gameInfo::~gameInfo()
 		_lowOrbit[n] = NULL;
 	}
 	
-	delete[] _lowOrbit;
-	_lowOrbit = NULL;
+	//delete[] _lowOrbit;
+	_lowOrbit.clear();
+	//_lowOrbit = NULL;
 }
 
 // this sets up the default values that are common to all players
