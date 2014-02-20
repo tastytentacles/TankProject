@@ -41,11 +41,14 @@ using namespace std;
 #define ROTATION_SPEED	1.3f
 #define NUM_PLAYERS		0
 
+// tank defines
+#define TOTAL_PLAYERS		2
+#define TANK_SPEED			0.1f
+#define TANK_MAX_SPEED		2
+#define TANK_ROT_SPEED		0.1f
 
-#define TOTAL_PLAYERS	2
-#define TANK_SPEED		0.1f
-#define TANK_MAX_SPEED	2
-#define TANK_ROT_SPEED	0.1f
+#define TANK_X_CONSTRAINT	6.0f
+#define TANK_Y_CONSTRAINT	4.5f
 
 // some constants to help normalise the frame rate between different machines:
 
@@ -115,8 +118,8 @@ class gameInfo
 
 		// ----- tank code
 		//_Tank** _lowOrbit;
-		vector<_Orbital*> _lowOrbit;
-		vector<_Orbital*> _hightOrbit;
+		vector<_Tank*> _lowOrbit;
+		vector<_Shell*> _hightOrbit;
 		// ----- tank code
 		
 };
@@ -453,16 +456,11 @@ void updateGame(HDC deviceContext, gameInfo* currentGame)
 		}  
 	}
 
-	for ()
-
 	for (int n = 0; n < TOTAL_PLAYERS; n++)
 	{
 		AP->_Speed += (TANK_SPEED * deltaAdjustment) * (AP->_Key_Up - AP->_Key_Down);
 
 		float $Direction = (TANK_ROT_SPEED * deltaAdjustment) * (AP->_Key_Right - AP->_Key_Left);
-		//float $Xpos = (cos($Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
-		//float $Ypos = (sin($Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
-
 
 		if (AP->_hitBox._Get_PointIntersect(AP->_pos._x, AP->_pos._y, 0, 0, AP->_Direction + $Direction))
 		{
@@ -470,7 +468,6 @@ void updateGame(HDC deviceContext, gameInfo* currentGame)
 		}
 
 		AP->_Direction += $Direction;
-		//currentGame->_lowOrbit[n]->_Direction += (TANK_ROT_SPEED * deltaAdjustment) * (currentGame->_lowOrbit[n]->_Key_Right - currentGame->_lowOrbit[n]->_Key_Left);
 
 		float $Xpos = (sin(AP->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
 		float $Ypos = (cos(AP->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
@@ -484,12 +481,11 @@ void updateGame(HDC deviceContext, gameInfo* currentGame)
 
 		AP->_pos._x += $Xpos;
 		AP->_pos._y += $Ypos;
-		
-		//AP->_pos._y += (cos(AP->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
-		//AP->_pos._x += (sin(AP->_Direction) * ((TANK_ROT_SPEED * deltaAdjustment) * AP->_Speed));
 
 		AP->_Turret_Direction += (AP->_Key_TRot_Right - AP->_Key_TRot_Left) * 0.1f;
 
+
+		// lock tanks max speed
 		if (AP->_Speed > TANK_MAX_SPEED)
 		{
 			AP->_Speed = TANK_MAX_SPEED;
@@ -499,9 +495,21 @@ void updateGame(HDC deviceContext, gameInfo* currentGame)
 			AP->_Speed = -TANK_MAX_SPEED;
 		}
 
+		// slow tank down --- simple friction
 		if (!AP->_Key_Up && !AP->_Key_Down)
 		{
 			AP->_Speed -= AP->_Speed / 500;
+		}
+
+		// screen space loop
+		if (abs(AP->_pos._x) > TANK_X_CONSTRAINT)
+		{
+			AP->_pos._x = (abs(AP->_pos._x) / AP->_pos._x) * TANK_X_CONSTRAINT * -1;
+		}
+
+		if (abs(AP->_pos._y) > TANK_Y_CONSTRAINT)
+		{
+			AP->_pos._y = (abs(AP->_pos._y) / AP->_pos._y) * TANK_Y_CONSTRAINT * -1;
 		}
 	}
 }
@@ -752,15 +760,21 @@ gameInfo::~gameInfo()
 	playerArray = NULL;
 
 
-	for (int n = 0; n < TOTAL_PLAYERS; n++)
+	for (int n = 0; n < _lowOrbit.size; n++)
 	{
 		delete _lowOrbit[n];
 		_lowOrbit[n] = NULL;
 	}
 	
-	//delete[] _lowOrbit;
 	_lowOrbit.clear();
-	//_lowOrbit = NULL;
+
+	for (int n = 0; n < _hightOrbit.size; n++)
+	{
+		delete _hightOrbit[n];
+		_hightOrbit[n] = NULL;
+	}
+
+	_hightOrbit.clear();
 }
 
 // this sets up the default values that are common to all players

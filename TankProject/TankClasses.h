@@ -62,5 +62,5 @@ public:
 
 class _Shell : public _Orbital
 {
-	//this is place holder for the bullet class
+	
 };
